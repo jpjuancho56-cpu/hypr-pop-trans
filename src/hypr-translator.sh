@@ -28,10 +28,22 @@ hypr_trans_handle_clipboard() {
     echo -e "$current_text"
     echo ""
 
+    # Detectamos el idioma
+    local detected_language=$(trans -identify "$current_text" | tr -d '[:space:]')
+    detected_language="${detected_language:4:2}"
+    detected_language="${detected_language,,}"
+    
     # Mostrar Traducción
     echo -e "${HYPR_TRANS_GREEN}🌐 Traducción (Español):${ENDCOLOR}"
-    # trans :es hace la traducción rápida al español
-    trans -brief :es "$current_text"
+    # Si detecta inglés (en), traducimos estrictamente a español (:es)
+    if [ "$detected_language" = "en" ]; then
+        trans -brief en:es "$current_text"
+    elif [ "$detected_language" = "es" ]; then
+        trans -brief es:en "$current_text"
+    else
+        # Por defecto si no está seguro (ej. código o símbolos), traduce ambos idiomas
+        trans -brief :es+en "$current_text"
+    fi
     echo ""
 }
 
