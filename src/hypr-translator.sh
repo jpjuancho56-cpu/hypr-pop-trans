@@ -54,11 +54,12 @@ clear
 echo -e "${HYPR_TRANS_BLUE}🚀 Iniciando escucha del portapapeles...${ENDCOLOR}"
 echo -e "${HYPR_TRANS_GRAY}Selecciona o copia algún texto para empezar.${ENDCOLOR}"
 
-# wl-paste --watch ejecuta una función cada vez que el portapapeles cambia.
-# Usamos 'pipe' para pasarle el contenido copiado directamente a nuestra función.
 export -f hypr_trans_handle_clipboard
 export HYPR_TRANS_BLUE HYPR_TRANS_GREEN HYPR_TRANS_GRAY ENDCOLOR
 
-# Escuchar tanto la selección primaria (resaltar texto) como el portapapeles normal (Ctrl+C)
-# Usamos un bucle while leyendo el flujo de wl-paste de forma continua
-wl-paste --type text/plain --watch bash -c 'hypr_trans_handle_clipboard "$(wl-paste)"'
+# wl-paste --watch ejecuta una función cada vez que el portapapeles cambia.
+# Escuchar el portapapeles y procesarlo
+wl-paste --type text/plain --watch bash -c '
+    clipboard_text=$(cat)
+    hypr_trans_handle_clipboard "$clipboard_text"
+'
