@@ -17,6 +17,12 @@ hypr_trans_handle_clipboard() {
 
     # Limpiar la ventana para el nuevo contenido
     clear
+        
+    detected_language=$(
+        trans -no-ansi -identify "$current_text" |
+        awk '/^Code/ {print tolower($2)}' |
+        cut -d'-' -f1
+    )
 
     # Cabecera estética
     echo -e "${HYPR_TRANS_BLUE}✨ hypr-translate (Modo Reactivo) ✨${ENDCOLOR}"
@@ -26,23 +32,17 @@ hypr_trans_handle_clipboard() {
     # Mostrar Texto Original
     echo -e "${HYPR_TRANS_BLUE}📝 Original:${ENDCOLOR}"
     echo -e "$current_text"
-    echo ""
 
-    # Detectamos el idioma
-    local detected_language=$(trans -identify "$current_text" | tr -d '[:space:]')
-    detected_language="${detected_language:4:2}"
-    detected_language="${detected_language,,}"
-    
     # Mostrar Traducción
     echo -e "${HYPR_TRANS_GREEN}🌐 Traducción (Español):${ENDCOLOR}"
+
+    # Detectamos el idioma
     # Si detecta inglés (en), traducimos estrictamente a español (:es)
     if [ "$detected_language" = "en" ]; then
         trans -brief en:es "$current_text"
-    elif [ "$detected_language" = "es" ]; then
-        trans -brief es:en "$current_text"
     else
-        # Por defecto si no está seguro (ej. código o símbolos), traduce ambos idiomas
-        trans -brief :es+en "$current_text"
+        # Por defecto asumimos que es espanol si no está seguro ,
+        trans -brief :es:en "$current_text"
     fi
     echo ""
 }
