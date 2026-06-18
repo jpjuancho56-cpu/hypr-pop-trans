@@ -9,6 +9,8 @@ ENDCOLOR="\e[0m"
 # Función interna que procesa y dibuja la traducción
 hypr_trans_handle_clipboard() {
     local current_text="$1"
+    local detected_language
+    local word_count
 
     # Evitar procesar si el texto está vacío o son solo espacios
     if [[ -z "${current_text// }" ]]; then
@@ -17,7 +19,14 @@ hypr_trans_handle_clipboard() {
 
     # Limpiar la ventana para el nuevo contenido
     clear
-        
+
+    word_count=$(
+        printf '%s' "$current_text" |
+        tr '_-' '  ' |
+        wc -w
+    )
+    echo -e "cantidad de palabras: ${word_count}"
+    
     detected_language=$(
         trans -no-ansi -identify "$current_text" |
         awk '/^Code/ {print tolower($2)}' |
@@ -29,9 +38,12 @@ hypr_trans_handle_clipboard() {
     echo -e "${HYPR_TRANS_GRAY}Selecciona cualquier texto para traducir en tiempo real...${ENDCOLOR}"
     echo -e "${HYPR_TRANS_GRAY}--------------------------------------------------${ENDCOLOR}\n"
 
-    # Mostrar Texto Original
-    echo -e "${HYPR_TRANS_BLUE}📝 Original:${ENDCOLOR}"
-    echo -e "$current_text"
+    # Si el texto es largo no mostramos el texto original solo la traducción
+    if ((word_count < 50)); then
+        # Mostrar Texto Original
+        echo -e "${HYPR_TRANS_BLUE}📝 Original:${ENDCOLOR}"
+        echo -e "$current_text"
+    fi
 
     # Mostrar Traducción
     echo -e "${HYPR_TRANS_GREEN}🌐 Traducción (Español):${ENDCOLOR}"
