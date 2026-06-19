@@ -6,6 +6,9 @@ HYPR_TRANS_GREEN="\e[1;32m"
 HYPR_TRANS_GRAY="\e[2m"
 ENDCOLOR="\e[0m"
 
+export LONG_TRANSLATION_THRESHOLD=50
+export DETAILED_TRANSLATION_THRESHOLD=4
+
 # Función interna que procesa y dibuja la traducción
 hypr_trans_handle_clipboard() {
     local current_text="$1"
@@ -39,27 +42,43 @@ hypr_trans_handle_clipboard() {
     echo -e "${HYPR_TRANS_GRAY}--------------------------------------------------${ENDCOLOR}\n"
 
     # Si el texto es largo no mostramos el texto original solo la traducción
-    if ((word_count < 50)); then
+    if ((word_count < LONG_TRANSLATION_THRESHOLD)); then
         # Mostrar Texto Original
         echo -e "${HYPR_TRANS_BLUE}📝 Original:${ENDCOLOR}"
         echo -e "$current_text"
     fi
 
     # Mostrar Traducción
-    echo -e "${HYPR_TRANS_GREEN}🌐 Traducción (Español):${ENDCOLOR}"
-
-    # Detectamos el idioma
-    # Si detecta inglés (en), traducimos estrictamente a español (:es)
-    if [ "$detected_language" = "en" ]; then
-        trans -brief en:es "$current_text"
-    else
-        # Por defecto asumimos que es espanol si no está seguro ,
-        trans -brief :es:en "$current_text"
-    fi
+    echo -e "${HYPR_TRANS_GREEN}🌐 Traducción (Español):${ENDCOLOR}"       
+    translate_text "$current_text" "$detected_language" "$word_count"
     echo ""
 }
 
-# --- BUCLE DE ESCUCHA ACTIVA (WAYLAND) ---
+translate_text() {
+    local text="$1"
+    local language="$2"
+    local word_count="$3"
+
+    local source_target
+    local trans_args=()
+
+    if [[ "$language" == "en" ]]; then
+        source_target="en:es"
+    else
+        # Si detecta inglés (en), traducimos estrictamente a español (:es)
+        source_target="es:en"
+    fi
+
+    if ((word_count > DETAILED_TRANSLATION_THRESHOLD)); then
+        trans_args+=("-brief")
+    else 
+        trans_args+=("-show-languages" "n" "-show-original" "n")
+    fi
+    
+    trans "${trans_args[@]}" "$source_target" "$text"
+}
+
+# --- BUCLE DE ESCUCHA a (WAYLAND) ---
 
 # Limpieza inicial de la pantalla
 clear
@@ -68,6 +87,9 @@ echo -e "${HYPR_TRANS_GRAY}Selecciona o copia algún texto para empezar.${ENDCOL
 
 export -f hypr_trans_handle_clipboard
 export HYPR_TRANS_BLUE HYPR_TRANS_GREEN HYPR_TRANS_GRAY ENDCOLOR
+export -f translate_text
+export LONG_TRANSLATION_THRESHOLD
+export DETAILED_TRANSLATION_THRESHOLD
 
 # wl-paste --watch ejecuta una función cada vez que el portapapeles cambia.
 # Escuchar el portapapeles y procesarlo
