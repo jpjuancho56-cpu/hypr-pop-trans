@@ -58,6 +58,11 @@ hypr_trans_handle_clipboard() {
     echo -e "${HYPR_TRANS_GREEN}🌐 Traducción (Español):${ENDCOLOR}"       
     translate_text "$normalized_text" "$detected_language" "$word_count"
     echo ""
+    
+    echo "-------- Debug -------"
+    # echo "${trans_args[@]}"
+    echo "texto: ${normalized_text}"
+    # echo "limite palabras ${DETAILED_TRANSLATION_THRESHOLD}"
 }
 
 translate_text() {
