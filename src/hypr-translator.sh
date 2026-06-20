@@ -14,6 +14,7 @@ hypr_trans_handle_clipboard() {
     local current_text="$1"
     local detected_language
     local word_count
+    local normalized_text
 
     # Evitar procesar si el texto está vacío o son solo espacios
     if [[ -z "${current_text// }" ]]; then
@@ -23,6 +24,11 @@ hypr_trans_handle_clipboard() {
     # Limpiar la ventana para el nuevo contenido
     clear
 
+    normalized_text=$(
+        printf '%s' "$current_text" |
+        tr '_' ' '
+    )
+    
     word_count=$(
         printf '%s' "$current_text" |
         tr '_-' '  ' |
@@ -50,7 +56,7 @@ hypr_trans_handle_clipboard() {
 
     # Mostrar Traducción
     echo -e "${HYPR_TRANS_GREEN}🌐 Traducción (Español):${ENDCOLOR}"       
-    translate_text "$current_text" "$detected_language" "$word_count"
+    translate_text "$normalized_text" "$detected_language" "$word_count"
     echo ""
 }
 
