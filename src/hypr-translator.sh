@@ -8,6 +8,7 @@ ENDCOLOR="\e[0m"
 
 export LONG_TRANSLATION_THRESHOLD=50
 export DETAILED_TRANSLATION_THRESHOLD=4
+export VOCABULARY_API_URL="http://localhost:3000/expressions"
 
 # Función interna que procesa y dibuja la traducción
 hypr_trans_handle_clipboard() {
@@ -61,8 +62,34 @@ hypr_trans_handle_clipboard() {
     
     echo "-------- Debug -------"
     # echo "${trans_args[@]}"
-    echo "texto: ${normalized_text}"
+    # echo "texto: ${normalized_text}"
     # echo "limite palabras ${DETAILED_TRANSLATION_THRESHOLD}"
+    send_event "$normalized_text" "$word_count"
+}
+
+send_event() {
+    text="$1"
+    word_count="$2"
+    local json
+
+    json=$(
+        jq -n \
+        --arg text "$text" \
+        --argjson count "$word_count" \
+        '{
+            text: $text,
+            word_count: $count,
+        }'
+    )
+
+ curl \
+        --silent \
+        --show-error \
+        --fail \
+        -X POST \
+        "$VOCABULARY_API_URL" \
+        -H "Content-Type: application/json" \
+        -d "$json"
 }
 
 translate_text() {
@@ -96,7 +123,7 @@ clear
 echo -e "${HYPR_TRANS_BLUE}🚀 Iniciando escucha del portapapeles...${ENDCOLOR}"
 echo -e "${HYPR_TRANS_GRAY}Selecciona o copia algún texto para empezar.${ENDCOLOR}"
 
-export -f hypr_trans_handle_clipboard
+export -f hypr_trans_handle_clipboard send_event
 export HYPR_TRANS_BLUE HYPR_TRANS_GREEN HYPR_TRANS_GRAY ENDCOLOR
 export -f translate_text
 export LONG_TRANSLATION_THRESHOLD
