@@ -1,11 +1,10 @@
-CREATE TABLE expressions (
+CREATE TABLE IF NOT EXISTS expressions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
     original_text TEXT NOT NULL,
     normalized_text TEXT NOT NULL,
 
     source_language TEXT NOT NULL,
-    target_language TEXT NOT NULL,
 
     translation_count INTEGER NOT NULL DEFAULT 1,
 
@@ -22,14 +21,13 @@ CREATE TABLE expressions (
     last_seen_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE UNIQUE INDEX idx_expression_unique
+CREATE UNIQUE INDEX IF NOT EXISTS idx_expression_unique
 ON expressions (
     normalized_text,
-    source_language,
-    target_language
+    source_language
 );
 
-CREATE TABLE translation_events (
+CREATE TABLE IF NOT EXISTS translation_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
     expression_id INTEGER NOT NULL,

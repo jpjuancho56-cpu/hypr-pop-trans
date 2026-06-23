@@ -1,20 +1,24 @@
 import express from "express";
 
+import expressionsRoutes
+from "./routes/expressions.routes.js";
+
+import { initializedDatabase }
+from "./db/init.js";
+
+initializedDatabase();
+
 const app = express();
 
 app.use(express.json());
 
-app.post("/expressions", (req, res) => {
-    console.log(req.body);
-    console.log("Received expression:");
-    console.dir(req.body, { depth: null });
-
-    res.status(201).json({
-        success: true,
-    });
-});
-
+app.use(
+    "/expressions",
+    expressionsRoutes
+);
 
 app.listen(3000, () => {
-    console.log("Server listening on port 3000");
+    console.log(
+        "Server listening on port 3000"
+    );
 });
