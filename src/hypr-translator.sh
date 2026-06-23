@@ -64,21 +64,28 @@ hypr_trans_handle_clipboard() {
     # echo "${trans_args[@]}"
     # echo "texto: ${normalized_text}"
     # echo "limite palabras ${DETAILED_TRANSLATION_THRESHOLD}"
-    send_event "$normalized_text" "$word_count"
+    send_event "$current_text" "$word_count"  "$normalized_text" "$detected_language"
 }
 
 send_event() {
     text="$1"
     word_count="$2"
+    normalized_text="$3"
+    source_language="$4"
+    
     local json
 
     json=$(
         jq -n \
-        --arg text "$text" \
-        --argjson count "$word_count" \
+            --arg original_text "$text" \
+            --arg normalized_text "$normalized_text" \
+            --arg source_language "$source_language" \
+            --argjson word_count "$word_count" \
         '{
-            text: $text,
-            word_count: $count,
+            original_text: $original_text,
+            normalized_text: $normalized_text,
+            word_count: $word_count,
+            source_language: $source_language,
         }'
     )
 
