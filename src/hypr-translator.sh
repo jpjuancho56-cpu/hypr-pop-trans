@@ -10,6 +10,21 @@ export LONG_TRANSLATION_THRESHOLD=50
 export DETAILED_TRANSLATION_THRESHOLD=4
 export VOCABULARY_API_URL="http://localhost:3000/expressions"
 
+STATE_FILE="/tmp/hypr_trans_state.txt"
+
+if [[ "$1" == "--play" ]]; then
+    if [[ -f "$STATE_FILE" ]]; then
+        read -r language text < "$STATE_FILE"
+        if [[ -n "$text" ]]; then
+            if [[ "$language" == "en" ]]; then
+                trans -brief -speak -player "mpv" "$text" > /dev/null 2>&1
+            else 
+                trans -brief -play -player "mpv" "$text" > /dev/null 2>&1
+            fi
+        fi
+    fi
+fi
+
 # Función interna que procesa y dibuja la traducción
 hypr_trans_handle_clipboard() {
     local current_text="$1"
@@ -58,6 +73,7 @@ hypr_trans_handle_clipboard() {
     # Mostrar Traducción
     echo -e "${HYPR_TRANS_GREEN}🌐 Traducción (Español):${ENDCOLOR}"       
     translate_text "$normalized_text" "$detected_language" "$word_count"
+    echo "$detected_language $normalized_text" > "$STATE_FILE"
     echo ""
     
     echo "-------- Debug -------"
@@ -121,10 +137,11 @@ translate_text() {
     fi
     
     trans "${trans_args[@]}" "$source_target" "$text"
+
 }
 
 # --- BUCLE DE ESCUCHA a (WAYLAND) ---
-
+rm -f "$STATE_FILE"
 # Limpieza inicial de la pantalla
 clear
 echo -e "${HYPR_TRANS_BLUE}🚀 Iniciando escucha del portapapeles...${ENDCOLOR}"
@@ -135,6 +152,7 @@ export HYPR_TRANS_BLUE HYPR_TRANS_GREEN HYPR_TRANS_GRAY ENDCOLOR
 export -f translate_text
 export LONG_TRANSLATION_THRESHOLD
 export DETAILED_TRANSLATION_THRESHOLD
+export STATE_FILE
 
 # wl-paste --watch ejecuta una función cada vez que el portapapeles cambia.
 # Escuchar el portapapeles y procesarlo
