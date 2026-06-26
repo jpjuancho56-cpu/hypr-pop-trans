@@ -11,18 +11,33 @@ export DETAILED_TRANSLATION_THRESHOLD=4
 export VOCABULARY_API_URL="http://localhost:3000/expressions"
 
 STATE_FILE="/tmp/hypr_trans_state.txt"
+export AUDIO_CACHE="/tmp/hypr_trans_voice.mp3"
 
 if [[ "$1" == "--play" ]]; then
     if [[ -f "$STATE_FILE" ]]; then
         read -r language text < "$STATE_FILE"
         if [[ -n "$text" ]]; then
-            if [[ "$language" == "en" ]]; then
-                trans -brief -speak -player "mpv" "$text" > /dev/null 2>&1
-            else 
-                trans -brief -play -player "mpv" "$text" > /dev/null 2>&1
+            #Generate a hash
+            current_hash=$(echo -n "$language:$text" | md5sum | cut -d' ' -f1)
+            # Read the last hash
+            cached_hash=""
+            [[ -f "${AUDIO_CACHE}.hash" ]] && cached_hash=$(cat "$AUDIO_CACHE.hash")
+            
+            # Check if the text is the same and if exist the audio
+            if [[ "$current_hash" == "$cached_hash" && -f "$AUDIO_CACHE" ]]; then
+                mpv --no-video "$AUDIO_CACHE" > /dev/null 2>&1
+            else
+                if [[ "$language" == "en" ]]; then
+                    trans -brief -speak -player "mpv" -download-audio-as "$AUDIO_CACHE" "$text" > /dev/null 2>&1
+                else 
+                    trans -brief -play -player "mpv" -download-audio-as "$AUDIO_CACHE" "$text" > /dev/null 2>&1
+                fi
+                # Save the hash
+                echo "$current_hash" > "${AUDIO_CACHE}.hash"
             fi
         fi
     fi
+    exit 0
 fi
 
 # Función interna que procesa y dibuja la traducción
