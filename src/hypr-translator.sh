@@ -85,40 +85,40 @@ hypr_trans_handle_clipboard() {
         echo -e "$current_text"
     fi
 
+    translation=$(translate_text "$normalized_text" "$detected_language" "$word_count")
+    echo "$detected_language $normalized_text" > "$STATE_FILE"
+
     # Mostrar Traducción
     echo -e "${HYPR_TRANS_GREEN}🌐 Traducción (Español):${ENDCOLOR}"       
-    translate_text "$normalized_text" "$detected_language" "$word_count"
-    echo "$detected_language $normalized_text" > "$STATE_FILE"
+    echo "$translation"
     echo ""
     
-    echo "-------- Debug -------"
+    # echo "-------- Debug -------"
+    # echo "texto: ${translation}"
     # echo "${trans_args[@]}"
-    # echo "texto: ${normalized_text}"
     # echo "limite palabras ${DETAILED_TRANSLATION_THRESHOLD}"
-    send_event "$current_text" "$word_count"  "$normalized_text" "$detected_language"
+    # send_event "$current_text" "$word_count"  "$translation"
 }
 
 send_event() {
     text="$1"
     word_count="$2"
-    normalized_text="$3"
-    source_language="$4"
+    translation="$3"
     
     local json
 
     json=$(
         jq -n \
             --arg original_text "$text" \
-            --arg normalized_text "$normalized_text" \
-            --arg source_language "$source_language" \
+            --arg translation "$translation" \
             --argjson word_count "$word_count" \
         '{
             original_text: $original_text,
-            normalized_text: $normalized_text,
+            translation: $translation,
             word_count: $word_count,
-            source_language: $source_language,
         }'
     )
+
 
  curl \
         --silent \
