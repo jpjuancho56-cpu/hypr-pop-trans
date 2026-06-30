@@ -7,13 +7,13 @@ router.post('/', async (req, res) => {
   console.log('Received expression:');
   console.dir(req.body, { depth: null });
 
-  const { original_text, normalized_text, source_language, word_count } = req.body;
+  const { original_text, context_sentence, translation, word_count, source_app } = req.body;
 
   const result = await registerExpression({
-    normalized_text,
-    source_language,
     original_text,
+    translation,
     word_count,
+    source_app,
   });
 
   if (!result.saved) {
